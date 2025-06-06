@@ -121,31 +121,30 @@ const NotaFiscalForm: React.FC = () => {
   };
 
   const validarXml = async (xml: string) => {
-  try {
-    const response = await fetch('http://localhost:5173/api/validar-xml', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/xml',
-      },
-      body: xml,
-    });
+    try {
+      const response = await fetch('http://localhost:5173/api/validar-xml', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml',
+        },
+        body: xml,
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result?.error || 'Erro na validação');
+      if (!response.ok) {
+        throw new Error(result?.error || 'Erro na validação');
+      }
+
+      console.log('XML válido:', result);
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao validar XML:', error.message);
+      return false;
     }
+  };
 
-    console.log('XML válido:', result);
-    return true;
-  } catch (error: any) {
-    console.error('Erro ao validar XML:', error.message);
-    return false;
-  }
-};
-
-
-const onSubmit = async (data: NotaFiscalFormData) => {
+  const onSubmit = async (data: NotaFiscalFormData) => {
     try {
       if (produtos.length === 0) {
         adicionarNotificacao('erro', 'Adicione pelo menos um produto');
@@ -171,17 +170,20 @@ const onSubmit = async (data: NotaFiscalFormData) => {
       const numeroNota = Math.floor(Math.random() * 1000000).toString().padStart(9, '0');
       const cNF = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
 
-      const chave =         emissor.endereco.uf === 'SP' ? '35' : '11',
-        new Date().toISOString().slice(2, 7).replace('-', ''),
+      const chave = [
+        emissor.endereco.uf === 'SP' ? '35' : '11',
+        new Date().toISOString().slice(2, 4) + new Date().toISOString().slice(5, 7),
         emissor.cnpj.replace(/\D/g, ''),
         '55',
-        '1',
+        '001',
         numeroNota,
         '1',
-        cNF
-      );
+        cNF,
+        '0' // Placeholder for DV calculation
+      ].join('');
 
-      const notaFiscal:         ide: {
+      const notaFiscal = {
+        ide: {
           cUF: emissor.endereco.uf === 'SP' ? '35' : '11',
           cNF,
           natOp: data.naturezaOperacao,
@@ -194,7 +196,7 @@ const onSubmit = async (data: NotaFiscalFormData) => {
           cMunFG: emissor.endereco.codigoMunicipio,
           tpImp: '1',
           tpEmis: '1',
-          cDV: chave.slice(-1),
+          cDV: '0', // Placeholder for DV calculation
           tpAmb: '2',
           finNFe: data.finalidade,
           indFinal: '1',
@@ -314,7 +316,6 @@ const onSubmit = async (data: NotaFiscalFormData) => {
         } : undefined
       };
 
-      const xml = 
       try {
         // Validar XML usando o endpoint completo do Supabase
         const validationResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validar-xml`, {
@@ -332,7 +333,8 @@ const onSubmit = async (data: NotaFiscalFormData) => {
           throw new Error(`Erro na validação do XML: ${validationResult?.error || 'XML inválido'}`);
         }
 
-        // Emitir         const nfeResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe`, {
+        // Emitir NF-e
+        const nfeResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
