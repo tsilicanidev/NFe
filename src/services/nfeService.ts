@@ -1,81 +1,35 @@
+import { NFe } from 'nfewizard-io';
 
-
-import { gerarXmlNFe } from '../utils/nfeUtils';
-import { SignedXml } from 'xml-crypto';
-import { DOMParser } from '@xmldom/xmldom';
-import fs from 'fs';
-import https from 'https';
-import axios from 'axios';
-
-// Função auxiliar para assinar o XML
-export function assinarXml(xml: string, tagAssinatura = 'infNFe', idAttr = 'Id'): string {
-  const privateKey = fs.readFileSync('certs/privateKey.pem', 'utf-8');
-  const cert = fs.readFileSync('certs/publicCert.pem', 'utf-8');
-  const sig = new SignedXml();
-  sig.addReference(`//*[local-name(.)='${tagAssinatura}']`, ['http://www.w3.org/2000/09/xmldsig#enveloped-signature']);
-  sig.signingKey = privateKey;
-  sig.keyInfoProvider = {
-    getKeyInfo: () => "<X509Data></X509Data>",
-    getKey: () => Buffer.from('')
-  };
-  const doc = new DOMParser().parseFromString(xml);
-  sig.computeSignature(xml);
-  const signedXml = sig.getSignedXml();
-  return signedXml;
-}
-
-// Envio da NF-e
-export async function emitirNFe(dados: any) {
-  const xml = gerarXmlNFe(dados);
-  const xmlAssinado = assinarXml(xml);
-
-  // Enviar para a SEFAZ (aqui simulado com log)
+export async function generateNFeXml(notaFiscal: any): Promise<string> {
   try {
-    const response = await axios.post(
-      'https://nfe.fazenda.sp.gov.br/ws/nfeautorizacao4.asmx',
-      xmlAssinado,
-      {
-        headers: {
-          'Content-Type': 'application/xml',
-        },
-        httpsAgent: new https.Agent({
-          pfx: fs.readFileSync('certs/certificado.pfx'),
-          passphrase: 'senha-certificado'
-        })
-      }
-    );
-
-    return response.data;
-  } catch (err: unknown) {
-    if (err instanceof Error) { console.error('Erro ao emitir NF-e:', err.message); }
-    console.error('Erro ao emitir NF-e:', err.message);
-    throw new Error('Erro ao enviar XML para SEFAZ: ' + err.message);
+    const nfe = new NFe();
+    const xml = await nfe.gerarXML(notaFiscal);
+    return xml;
+  } catch (error) {
+    console.error('Erro ao gerar XML:', error);
+    throw new Error('Erro ao gerar XML da NF-e');
   }
 }
 
-
-import { emitirNFeNFewizard } from './nfewizardService';
-
-/**
- * Emissão da NF-e utilizando nfewizard-io
- */
-export async function emitirNotaFiscalEletronica(dadosNota: any) {
+export async function emitirNFe(xml: string, certificado: { arquivo: string; senha: string }) {
   try {
-    const resultado = await emitirNFeNFewizard(dadosNota);
-    console.log('NF-e emitida com sucesso. Protocolo:', resultado.resposta.protocolo);
+    const nfe = new NFe({
+      certificado: {
+        pfx: Buffer.from(certificado.arquivo, 'base64'),
+        senha: certificado.senha
+      },
+      ambiente: 'homologacao'
+    });
+
+    const xmlAssinado = await nfe.assinarXML(xml);
+    const resposta = await nfe.enviarXML(xmlAssinado);
 
     return {
-      sucesso: true,
-      protocolo: resultado.resposta.protocolo,
-      xml: resultado.xml,
-      xmlAssinado: resultado.assinado,
-      resposta: resultado.resposta
+      xml: xmlAssinado,
+      resposta
     };
-  } catch (erro) {
-    console.error('Erro ao emitir NF-e:', erro);
-    return {
-      sucesso: false,
-      erro: erro.message || 'Erro desconhecido'
-    };
+  } catch (error) {
+    console.error('Erro ao emitir NF-e:', error);
+    throw error;
   }
 }

@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import { useEmissor } from '../contexts/EmissorContext';
 import { useCertificado } from '../contexts/CertificadoContext';
 import { useNotificacao } from '../contexts/NotificacaoContext';
-import { emitirNFe } from '../services/nfeService';
+import { emitirNFe, generateNFeXml } from '../services/nfeService';
 import { useNavigate } from 'react-router-dom';
 
 interface NotaFiscalFormData {
@@ -179,7 +179,7 @@ const NotaFiscalForm: React.FC = () => {
         numeroNota,
         '1',
         cNF,
-        '0' // Placeholder for DV calculation
+        '0'
       ].join('');
 
       const notaFiscal = {
@@ -196,7 +196,7 @@ const NotaFiscalForm: React.FC = () => {
           cMunFG: emissor.endereco.codigoMunicipio,
           tpImp: '1',
           tpEmis: '1',
-          cDV: '0', // Placeholder for DV calculation
+          cDV: '0',
           tpAmb: '2',
           finNFe: data.finalidade,
           indFinal: '1',
@@ -232,7 +232,7 @@ const NotaFiscalForm: React.FC = () => {
             xLgr: data.destinatario.endereco.logradouro,
             nro: data.destinatario.endereco.numero,
             xBairro: data.destinatario.endereco.bairro,
-            cMun: '3550308', // São Paulo
+            cMun: '3550308',
             xMun: data.destinatario.endereco.municipio,
             UF: data.destinatario.endereco.uf,
             CEP: data.destinatario.endereco.cep.replace(/\D/g, ''),
@@ -317,7 +317,8 @@ const NotaFiscalForm: React.FC = () => {
       };
 
       try {
-        // Validar XML usando o endpoint completo do Supabase
+        const xml = await generateNFeXml(notaFiscal);
+
         const validationResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validar-xml`, {
           method: 'POST',
           headers: {
@@ -333,7 +334,6 @@ const NotaFiscalForm: React.FC = () => {
           throw new Error(`Erro na validação do XML: ${validationResult?.error || 'XML inválido'}`);
         }
 
-        // Emitir NF-e
         const nfeResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe`, {
           method: 'POST',
           headers: {
@@ -355,7 +355,6 @@ const NotaFiscalForm: React.FC = () => {
         if (resultado.status === 'autorizada') {
           adicionarNotificacao('sucesso', 'NF-e autorizada com sucesso');
           
-          // Salvar a nota no banco de dados
           const { error: saveError } = await supabase
             .from('notas_fiscais')
             .insert({
