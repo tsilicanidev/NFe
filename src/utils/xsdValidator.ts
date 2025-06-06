@@ -1,5 +1,6 @@
 
 import fs from 'fs';
+// @ts-ignore
 import libxmljs from 'libxmljs2';
 
 export function validarXMLComXSD(xmlString: string, xsdPath: string): string[] {
@@ -8,5 +9,5 @@ export function validarXMLComXSD(xmlString: string, xsdPath: string): string[] {
   const xmlDoc = libxmljs.parseXml(xmlString);
 
   const isValid = xmlDoc.validate(xsdDoc);
-  return isValid ? [] : xmlDoc.validationErrors.map(err => err.message);
+  return isValid ? [] : xmlDoc.validationErrors.map((err: any) => err.message);
 }

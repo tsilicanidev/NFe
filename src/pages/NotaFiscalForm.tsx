@@ -7,7 +7,6 @@ import { useEmissor } from '../contexts/EmissorContext';
 import { useCertificado } from '../contexts/CertificadoContext';
 import { useNotificacao } from '../contexts/NotificacaoContext';
 import { emitirNFe } from '../services/nfeService';
-import { gerarChaveNFe, gerarXmlNFe, validarXmlComXSD, type NFe } from '../utils/nfeUtils';
 import { useNavigate } from 'react-router-dom';
 
 interface NotaFiscalFormData {
@@ -172,8 +171,7 @@ const onSubmit = async (data: NotaFiscalFormData) => {
       const numeroNota = Math.floor(Math.random() * 1000000).toString().padStart(9, '0');
       const cNF = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
 
-      const chave = gerarChaveNFe(
-        emissor.endereco.uf === 'SP' ? '35' : '11',
+      const chave =         emissor.endereco.uf === 'SP' ? '35' : '11',
         new Date().toISOString().slice(2, 7).replace('-', ''),
         emissor.cnpj.replace(/\D/g, ''),
         '55',
@@ -183,8 +181,7 @@ const onSubmit = async (data: NotaFiscalFormData) => {
         cNF
       );
 
-      const notaFiscal: NFe = {
-        ide: {
+      const notaFiscal:         ide: {
           cUF: emissor.endereco.uf === 'SP' ? '35' : '11',
           cNF,
           natOp: data.naturezaOperacao,
@@ -317,8 +314,7 @@ const onSubmit = async (data: NotaFiscalFormData) => {
         } : undefined
       };
 
-      const xml = gerarXmlNFe(notaFiscal, chave);
-
+      const xml = 
       try {
         // Validar XML usando o endpoint completo do Supabase
         const validationResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validar-xml`, {
@@ -336,8 +332,7 @@ const onSubmit = async (data: NotaFiscalFormData) => {
           throw new Error(`Erro na validação do XML: ${validationResult?.error || 'XML inválido'}`);
         }
 
-        // Emitir NFe usando o endpoint completo do Supabase
-        const nfeResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe`, {
+        // Emitir         const nfeResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

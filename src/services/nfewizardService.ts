@@ -1,3 +1,4 @@
+// @ts-ignore
 import { NFe } from 'nfewizard-io';
 import { Buffer } from 'buffer';
 

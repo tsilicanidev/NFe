@@ -16,6 +16,7 @@ export function assinarXml(xml: string, tagAssinatura = 'infNFe', idAttr = 'Id')
   sig.signingKey = privateKey;
   sig.keyInfoProvider = {
     getKeyInfo: () => "<X509Data></X509Data>",
+    getKey: () => Buffer.from('')
   };
   const doc = new DOMParser().parseFromString(xml);
   sig.computeSignature(xml);
@@ -45,7 +46,8 @@ export async function emitirNFe(dados: any) {
     );
 
     return response.data;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    if (err instanceof Error) { console.error('Erro ao emitir NF-e:', err.message); }
     console.error('Erro ao emitir NF-e:', err.message);
     throw new Error('Erro ao enviar XML para SEFAZ: ' + err.message);
   }

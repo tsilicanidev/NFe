@@ -1,11 +1,14 @@
-import { Router, Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
+// @ts-ignore
 import libxmljs from 'libxmljs2';
 
-const router = Router();
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
 
-router.post('/', (req: Request, res: Response) => {
   try {
     const xml = req.body;
 
@@ -22,7 +25,7 @@ router.post('/', (req: Request, res: Response) => {
     if (!isValid) {
       return res.status(400).json({
         error: 'XML inválido',
-        detalhes: xmlDoc.validationErrors.map(e => e.message),
+        detalhes: xmlDoc.validationErrors.map((e: any) => e.message),
       });
     }
 
@@ -30,6 +33,4 @@ router.post('/', (req: Request, res: Response) => {
   } catch (err: any) {
     return res.status(500).json({ error: 'Erro ao validar XML', detalhes: err.message });
   }
-});
-
-export default router;
+}
