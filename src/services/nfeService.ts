@@ -1,9 +1,8 @@
-import { NFe } from 'nfewizard-io';
+import { gerarXmlNFe } from '../utils/nfeUtils';
 
 export async function generateNFeXml(notaFiscal: any): Promise<string> {
   try {
-    const nfe = new NFe();
-    const xml = await nfe.gerarXML(notaFiscal);
+    const xml = gerarXmlNFe(notaFiscal);
     return xml;
   } catch (error) {
     console.error('Erro ao gerar XML:', error);
@@ -11,25 +10,4 @@ export async function generateNFeXml(notaFiscal: any): Promise<string> {
   }
 }
 
-export async function emitirNFe(xml: string, certificado: { arquivo: string; senha: string }) {
-  try {
-    const nfe = new NFe({
-      certificado: {
-        pfx: Buffer.from(certificado.arquivo, 'base64'),
-        senha: certificado.senha
-      },
-      ambiente: 'homologacao'
-    });
-
-    const xmlAssinado = await nfe.assinarXML(xml);
-    const resposta = await nfe.enviarXML(xmlAssinado);
-
-    return {
-      xml: xmlAssinado,
-      resposta
-    };
-  } catch (error) {
-    console.error('Erro ao emitir NF-e:', error);
-    throw error;
-  }
-}
+// Note: emitirNFe function removed as it's handled by Supabase Edge Function
