@@ -12,7 +12,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@nfewizard-io/nfce": "^1.0.2",
     "@supabase/supabase-js": "^2.48.1",
     "@tensorflow/tfjs": "^4.17.0",
     "axios": "^1.9.0",

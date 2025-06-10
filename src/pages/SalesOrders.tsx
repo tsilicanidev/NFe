@@ -115,6 +115,19 @@ function getPaymentMethodText(method: string): string {
 }
 
 function OrderDetailsModal({ isOpen, onClose, order }: OrderDetailsModalProps) {
+  async function aprovarPedido() {
+    if (!order) return;
+    try {
+      setLoading(true);
+      await processarEmissaoNFe(order);
+      alert('NF-e emitida com sucesso!');
+    } catch (e) {
+      alert('Erro na emissão da NF-e: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -166,6 +179,12 @@ function OrderDetailsModal({ isOpen, onClose, order }: OrderDetailsModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {order?.status === 'pending' && (
+        <button onClick={aprovarPedido} disabled={loading}>
+          {loading ? 'Emitindo...' : 'Aprovar e Emitir NF-e'}
+        </button>
+      )}
+
       <div className="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center">
@@ -279,6 +298,12 @@ function OrderDetailsModal({ isOpen, onClose, order }: OrderDetailsModalProps) {
                     
                     return (
                       <tr key={item.id}>
+      {order?.status === 'pending' && (
+        <button onClick={aprovarPedido} disabled={loading}>
+          {loading ? 'Emitindo...' : 'Aprovar e Emitir NF-e'}
+        </button>
+      )}
+
                         <td className="px-4 py-2 text-sm text-gray-900">{item.product.name}</td>
                         <td className="px-4 py-2 text-sm text-gray-900 text-right">
                           {item.quantity} {item.product.unit || 'UN'}
@@ -426,7 +451,7 @@ function SalesOrders() {
       
       // Abrir DANFE em nova janela
       if (resultado.chave) {
-        const danfeUrl = `${window.location.origin}/api/nfe/${resultado.chave}.pdf`;
+        const danfeUrl = `${window.location.origin}/api/nfe/danfe/${resultado.chave}`;
         window.open(danfeUrl, '_blank');
       }
       
@@ -514,6 +539,12 @@ function SalesOrders() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
+      {order?.status === 'pending' && (
+        <button onClick={aprovarPedido} disabled={loading}>
+          {loading ? 'Emitindo...' : 'Aprovar e Emitir NF-e'}
+        </button>
+      )}
+
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF8A00]"></div>
       </div>
     );
@@ -521,6 +552,12 @@ function SalesOrders() {
 
   return (
     <div className="p-6">
+      {order?.status === 'pending' && (
+        <button onClick={aprovarPedido} disabled={loading}>
+          {loading ? 'Emitindo...' : 'Aprovar e Emitir NF-e'}
+        </button>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Pedidos de Venda</h1>
         <button
@@ -648,14 +685,6 @@ function SalesOrders() {
                       >
                         <CheckCircle2 className="h-5 w-5" />
                       </button>
-
-<button
-  className="text-blue-600 underline ml-2"
-  onClick={() => window.open(`/api/nfe/${order.nfe_chave}.xml`, '_blank')}
->
-  Baixar XML
-</button>
-
                     )}
 
                     {/* Reject button - only for pending orders and admin/manager */}

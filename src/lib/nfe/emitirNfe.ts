@@ -1,54 +1,22 @@
-import { gerarXmlNFe, transmitirNFe, assinarXml, gerarDanfe } from '@nfewizard-io/node';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+import { emitirNFe } from '@nfewizard-io/node';
+import { saveFileToSupabase } from '../supabase-storage'; // adapte conforme sua lógica de storage
 
-export const processarEmissaoNFe = async (
-  orderId: string
-): Promise<{ sucesso: boolean; chave?: string; motivo?: string }> => {
+export async function processarEmissaoNFe(pedido: any) {
   try {
-    const { data: order, error } = await supabase
-      .from('sales_orders')
-      .select('*, customer:customers(*), items:sales_order_items(*, product:products(*))')
-      .eq('id', orderId)
-      .single();
-
-    if (error || !order) return { sucesso: false, motivo: 'Pedido não encontrado' };
-
-    // Gerar XML com validação JS-based (compatível com Vercel)
-    const xml = gerarXmlNFe(order, {
-      useForSchemaValidation: 'validateSchemaJsBased',
+    const response = await emitirNFe({
+      pedido,
+      certificadoPfxBase64: process.env.CERT_PFX || '',
+      senha: process.env.CERT_PASSWORD || '',
+      ambiente: 'homologacao',
     });
 
-    const xmlAssinado = await assinarXml(
-      xml,
-      process.env.CERT_PFX!,
-      process.env.CERT_PASSWORD!
-    );
+    await saveFileToSupabase(pedido.id, response.xml, 'xml');
+    await saveFileToSupabase(pedido.id, response.pdf, 'pdf');
 
-    const resposta = await transmitirNFe(xmlAssinado);
-    if (!resposta.sucesso) return { sucesso: false, motivo: resposta.motivo };
-
-    const pdf = await gerarDanfe(xmlAssinado);
-
-    await supabase.storage.from('nfe').upload(`xml/${resposta.chave}.xml`, Buffer.from(xmlAssinado), {
-      contentType: 'application/xml',
-      upsert: true,
-    });
-
-    await supabase.storage.from('nfe').upload(`pdf/${resposta.chave}.pdf`, pdf, {
-      contentType: 'application/pdf',
-      upsert: true,
-    });
-
-    await supabase
-      .from('sales_orders')
-      .update({ status: 'approved', nfe_chave: resposta.chave })
-      .eq('id', orderId);
-
-    return { sucesso: true, chave: resposta.chave };
-  } catch (e: any) {
-    console.error('Erro ao emitir NF-e:', e);
-    return { sucesso: false, motivo: e.message || 'Erro desconhecido' };
+    return response;
+  } catch (err) {
+    console.error('Erro na emissão da NF-e:', err);
+    throw err;
   }
-};
+}
