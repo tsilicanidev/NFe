@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function uploadXMLParaStorage(xml: string, chaveAcesso: string) {
@@ -27,5 +27,23 @@ export async function uploadPDFParaStorage(pdfBuffer: Buffer, chaveAcesso: strin
 
   if (error) {
     throw new Error(`Erro ao subir PDF para o storage: ${error.message}`);
+  }
+}
+
+export async function saveFileToSupabase(
+  bucket: 'nfe',
+  path: string,
+  content: Buffer | string,
+  contentType: string
+): Promise<void> {
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, content, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Erro ao salvar arquivo no Supabase Storage: ${error.message}`);
   }
 }
