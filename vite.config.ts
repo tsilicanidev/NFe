@@ -25,5 +25,10 @@ export default defineConfig({
         rewrite: (path) => path
       }
     }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: process.env.PORT || 4173,
+    allowedHosts: ['nfe-ne3i.onrender.com'], // 🔒 Permite acesso externo no Render
   }
 });
