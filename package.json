@@ -3,14 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage"
-  },
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "start": "vite preview",
+  "test": "vitest",
+  "test:coverage": "vitest run --coverage"
+},
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
     "@tensorflow/tfjs": "^4.17.0",
