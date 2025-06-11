@@ -3,7 +3,7 @@ import { Plus, Minus, Save, AlertTriangle, CheckCircle2, XCircle, Ban, Edit, Sea
 import { supabase } from '../lib/supabase';
 import { SalesOrderModal } from '../components/SalesOrderModal';
 import { useRole } from '../hooks/useRole';
-import { processarEmissaoNFe } from '../lib/nfe/emitirNfe';
+import { processarEmissaoNFe } from '@/lib/nfe/emitirNfe';
 
 
 interface Order {

@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ['@nfewizard-io/node']
+    }
+  },
   plugins: [react()],
   resolve: {
     alias: {
