@@ -1,4 +1,4 @@
-import { gerarDanfePDF } from '@nfewizard-io/node';
+import { gerarDanfePDF } from '@nfewizard-io';
 
 /**
  * Gera um PDF da DANFE a partir do XML da NFe.

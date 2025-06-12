@@ -41,8 +41,8 @@
     "xmlbuilder2": "^3.1.1",
     "xmldom": "^0.6.0",
     "zustand": "^4.5.2",
-    "@nfewizard-io/node": "^1.0.0"
-  },
+"@nfewizard-io/node": "git+https://github.com/nfewizard-org/nfewizard-io.git"
+},
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@testing-library/jest-dom": "^6.6.3",

@@ -1,5 +1,5 @@
 
-import { emitirNFe } from '@nfewizard-io/node';
+import { emitirNFe } from '@nfewizard-io';
 import { saveFileToSupabase } from '../supabase-storage'; // adapte conforme sua lógica de storage
 
 export async function processarEmissaoNFe(pedido: any) {

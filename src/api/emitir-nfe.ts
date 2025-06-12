@@ -1,4 +1,4 @@
-import { emitirNFe } from '@nfewizard-io/node';
+import { emitirNFe } from '@nfewizard-io';
 
 export async function POST(req: Request) {
   const { pedido } = await req.json();

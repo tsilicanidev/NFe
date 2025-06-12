@@ -1,4 +1,4 @@
-import { gerarDanfePDF } from '@nfewizard-io/node';
+import { gerarDanfePDF } from '@nfewizard-io';
 
 export async function POST(req: Request) {
   const { xml } = await req.json();
